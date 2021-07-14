@@ -1,26 +1,25 @@
 <template>
   <div id="app" class="container-fluid">
 
-    <div class="container">
-      <div class="row">
-        <div class="flex-row align-items-center">
-          <h1 class="text-info">Balance:</h1>
-          <p class="balance">€ {{ balance - totalSpent }}</p>
-        </div>
-      </div>
-    </div>
+    <HeaderBalance v-bind:balance="balance"/>
 
     <div class="container">
       <div class="row">
-        <div v-if="hasError" class="alert alert-danger" @click="hasError = !hasError">
-          <strong>Error:</strong> Please verify value, selected category or balance
+
+        <div v-if="hasError" class="alert alert-danger" @click="clearErrors">
+          <ErrorBox
+            v-bind:positive-spent="errorType.positiveSpent"
+            v-bind:no-category="errorType.noCategory"
+            v-bind:no-balance="errorType.noBalance"
+          />
         </div>
+
         <form @submit.prevent="addBalance">
           <div class="input-group mb-3">
             <div class="w-25 p-1">
               <input type="number" class="form-control" placeholder="€ 0" v-model="spent" />
             </div>
-            <div class="p-1">
+            <div class="p-1 select-options">
               <select class="select-options" v-model="category">
                 <option disabled value="">Category</option>
                 <option value="Housing">Housing</option>
@@ -43,26 +42,22 @@
       </div>
     </div>
 
-    <div class="container">
-      <div class="row">
-        <ul class="list-group">
-          <li v-for="(spentItem, index) in spentList" :key="index" class="list-group-item list-group-item-info">
-            <div class="row">
-              <div class="col-2"><p class="text-danger">-€ {{ spentItem.spent }}</p></div>
-              <div class="col-2"><p class="text-dark">{{ spentItem.category }}</p></div>
-              <div class="col-8"><p class="text-dark">{{ spentItem.comment }}</p></div>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
+    <SpentList v-bind:spent-list="spentList"/>
   </div>
 </template>
 
 <script>
+import HeaderBalance from "./components/HeaderBalance";
+import ErrorBox from "./components/ErrorBox";
+import SpentList from "./components/SpentList";
 
 export default {
   name: 'App',
+  components: {
+    SpentList,
+    ErrorBox,
+    HeaderBalance
+  },
   data() {
     return {
       balance: 1000,
@@ -71,46 +66,58 @@ export default {
       category: '',
       comment: '',
       hasError: false,
+      errorType: {
+        positiveSpent: false,
+        noCategory: false,
+        noBalance: false
+      },
       spentList: []
     }
   },
   methods: {
     addBalance: function () {
       const { spent, category, comment, balance, spentList } = this
-      let totalSpent = parseInt(this.totalSpent) + parseInt(spent)
+      let spentValue = parseInt(spent)
 
-      if (spent <= 0 || !category || totalSpent > balance) {
-        this.hasError = true;
-      } else {
-        this.totalSpent = totalSpent
+      this.errorType.positiveSpent = spentValue <=0
+      this.errorType.noCategory = !category
+      this.errorType.noBalance = spentValue > balance
+
+      this.hasError = this.errorType.positiveSpent ||
+                      this.errorType.noCategory ||
+                      this.errorType.noBalance
+
+      if (!this.hasError) {
+        this.balance -= spentValue
 
         spentList.push({
-          spent,
+          spent: spentValue,
           category,
           comment
         })
+
+        //Reset input values
+        this.category = ''
+        this.spent = ''
+        this.comment = ''
       }
+    },
+    clearErrors: function () {
+      this.hasError = false
+      this.errorType.positiveSpent = false
+      this.errorType.noCategory = false
+      this.errorType.noBalance = false
     }
   }
 }
 </script>
 
-<style>
+<style scoped>
   .flex {
     display: flex;
   }
 
-  .flex-row {
-    display: flex;
-  }
-
-  .balance {
-    font-size: 24px;
-    margin: 0;
-    padding-left: 16px;
-  }
-
-  .select-options {
+  select {
     border-radius: 0.25rem !important;
     height: 100%;
   }
