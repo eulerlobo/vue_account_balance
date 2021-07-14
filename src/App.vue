@@ -5,21 +5,24 @@
       <div class="row">
         <div class="flex-row align-items-center">
           <h1 class="text-info">Balance:</h1>
-          <p class="balance">€ {{ balance }}</p>
+          <p class="balance">€ {{ balance - totalSpent }}</p>
         </div>
       </div>
     </div>
 
     <div class="container">
       <div class="row">
-        <form>
+        <div v-if="hasError" class="alert alert-danger" @click="hasError = !hasError">
+          <strong>Error:</strong> Please verify value, selected category or balance
+        </div>
+        <form @submit.prevent="addBalance">
           <div class="input-group mb-3">
             <div class="w-25 p-1">
-              <input type="number" class="form-control" placeholder="€ 0" />
+              <input type="number" class="form-control" placeholder="€ 0" v-model="spent" />
             </div>
             <div class="p-1">
-              <select class="select-options">
-                <option selected>Category</option>
+              <select class="select-options" v-model="category">
+                <option disabled value="">Category</option>
                 <option value="Housing">Housing</option>
                 <option value="Food">Food</option>
                 <option value="Insurance">Insurance</option>
@@ -28,7 +31,7 @@
               </select>
             </div>
             <div class="w-25 p-1">
-              <input type="text" class="form-control" placeholder="Comment..." />
+              <input type="text" class="form-control" placeholder="Comment..." v-model="comment" />
             </div>
             <div class="input-group-append flex justify-content-center align-items-center p-1">
               <button>
@@ -40,15 +43,14 @@
       </div>
     </div>
 
-
     <div class="container">
       <div class="row">
         <ul class="list-group">
-          <li class="list-group-item list-group-item-info">
+          <li v-for="(spentItem, index) in spentList" :key="index" class="list-group-item list-group-item-info">
             <div class="row">
-              <div class="col-2"><p class="text-danger">-€ 100</p></div>
-              <div class="col-2"><p class="text-dark">Housing</p></div>
-              <div class="col-8"><p class="text-dark">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mattis sollicitudin elit, at laoreet nunc rhoncus non. Phasellus facilisis pretium dolor eget rhoncus. Nullam nec felis tristique, iaculis massa et, scelerisque nulla. Fusce eros mi, varius et suscipit sit amet, fermentum vel sem.</p></div>
+              <div class="col-2"><p class="text-danger">-€ {{ spentItem.spent }}</p></div>
+              <div class="col-2"><p class="text-dark">{{ spentItem.category }}</p></div>
+              <div class="col-8"><p class="text-dark">{{ spentItem.comment }}</p></div>
             </div>
           </li>
         </ul>
@@ -58,13 +60,36 @@
 </template>
 
 <script>
-// import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'App',
   data() {
     return {
-      balance: 1000
+      balance: 1000,
+      spent: 0,
+      totalSpent: 0,
+      category: '',
+      comment: '',
+      hasError: false,
+      spentList: []
+    }
+  },
+  methods: {
+    addBalance: function () {
+      const { spent, category, comment, balance, spentList } = this
+      let totalSpent = parseInt(this.totalSpent) + parseInt(spent)
+
+      if (spent <= 0 || !category || totalSpent > balance) {
+        this.hasError = true;
+      } else {
+        this.totalSpent = totalSpent
+
+        spentList.push({
+          spent,
+          category,
+          comment
+        })
+      }
     }
   }
 }
