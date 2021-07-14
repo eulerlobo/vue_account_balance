@@ -15,6 +15,16 @@ git a
 <script scoped>
 export default {
   name: 'ErrorBox',
-  props: ['positiveSpent', 'noCategory', 'noBalance']
+  props: {
+    positiveSpent: {
+      type: Boolean
+    },
+    noCategory: {
+      type: Boolean
+    },
+    noBalance: {
+      type: Boolean
+    }
+  }
 }
 </script>

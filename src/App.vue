@@ -1,7 +1,12 @@
 <template>
   <div id="app" class="container-fluid">
 
-    <HeaderBalance v-bind:balance="balance"/>
+    <SpentDetails
+      v-bind:spent-ratio-by-category="spentRatioByCategory"
+      v-bind:total-spent="totalSpent"
+    />
+
+    <HeaderBalance v-bind:balance="balance" />
 
     <div class="container">
       <div class="row">
@@ -50,10 +55,12 @@
 import HeaderBalance from "./components/HeaderBalance";
 import ErrorBox from "./components/ErrorBox";
 import SpentList from "./components/SpentList";
+import SpentDetails from "./components/SpentDetails";
 
 export default {
   name: 'App',
   components: {
+    SpentDetails,
     SpentList,
     ErrorBox,
     HeaderBalance
@@ -71,7 +78,8 @@ export default {
         noCategory: false,
         noBalance: false
       },
-      spentList: []
+      spentList: [],
+      spentRatioByCategory: []
     }
   },
   methods: {
@@ -89,11 +97,12 @@ export default {
 
       if (!this.hasError) {
         this.balance -= spentValue
+        this.totalSpent += spentValue
 
         spentList.push({
           spent: spentValue,
           category,
-          comment
+          comment,
         })
 
         //Reset input values
@@ -103,6 +112,9 @@ export default {
 
         //Reset any error message
         this.clearErrors()
+
+        //Adjust spent ratio
+        this.updateSpentRatio()
       }
     },
     clearErrors: function () {
@@ -110,6 +122,19 @@ export default {
       this.errorType.positiveSpent = false
       this.errorType.noCategory = false
       this.errorType.noBalance = false
+    },
+    updateSpentRatio: function () {
+      const { spentList, totalSpent } = this;
+      const spentRatioByCategory = Array.from(
+        spentList.reduce((map, {category, spent}) =>
+          map.set(category, (map.get(category) || 0) + spent), new Map),
+        ([category, spent]) => ({
+          category,
+          ratio: Math.round((spent/totalSpent)*100)
+        })
+      )
+
+      this.spentRatioByCategory = spentRatioByCategory;
     }
   }
 }
