@@ -100,6 +100,9 @@ export default {
         this.category = ''
         this.spent = ''
         this.comment = ''
+
+        //Reset any error message
+        this.clearErrors()
       }
     },
     clearErrors: function () {
